@@ -86,6 +86,17 @@ pub(super) fn dispatch<'a>(
         ),
         abi::CLOSE => Outcome::Complete(close(process, arguments[0])),
         abi::FSTAT => fstat(process, arguments[0], arguments[1]),
+        abi::FACESSAT => {
+            metadata::faccessat(process, files, arguments[0], arguments[1], arguments[2], 0)
+        }
+        abi::FACESSAT2 => metadata::faccessat(
+            process,
+            files,
+            arguments[0],
+            arguments[1],
+            arguments[2],
+            arguments[3],
+        ),
         abi::GETDENTS64 => getdents(process, arguments[0], arguments[1], arguments[2]),
         abi::NEWFSTATAT => statat(
             process,

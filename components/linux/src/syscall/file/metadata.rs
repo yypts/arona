@@ -7,7 +7,9 @@ use runtime::{Call, Handle};
 
 use super::super::{
     Outcome,
-    abi::{EBADF, EFAULT, EINVAL, ENOENT, EOVERFLOW, Errno, SyscallResult},
+    abi::{
+        EACCES, EBADF, EFAULT, EINVAL, EIO, ENOENT, EOPNOTSUPP, EOVERFLOW, Errno, SyscallResult,
+    },
 };
 use super::{Pending, completion, fd, filesystem_error, open, outcome};
 use crate::{file::OpenFileDescription, process::Process};
@@ -74,6 +76,44 @@ fn descriptor_stat<'a>(process: &Process<'a>, raw: usize, buffer: StatBuffer) ->
             })
             .map_err(filesystem_error),
     )
+}
+
+pub(in crate::syscall) fn faccessat<'a>(
+    process: &Process<'a>,
+    files: &fs::Client<'a>,
+    _directory: usize,
+    path: usize,
+    mode: usize,
+    flags: usize,
+) -> Outcome<'a> {
+    let result = (|| {
+        if mode & !7 != 0 {
+            return Err(EINVAL);
+        }
+        // AT_EACCESS 与单用户模型等价；其余标志需要符号链接语义，暂不支持。
+        if flags != 0 && flags != 0x200 {
+            return Err(EOPNOTSUPP);
+        }
+        let name = open::path(process, path)?;
+        // 相对路径需要异步读取当前目录，目前只处理绝对路径。
+        if !name.starts_with(b"/") {
+            return Err(EOPNOTSUPP);
+        }
+        let metadata = files
+            .metadata(&name, deadline()?)
+            .map_err(filesystem_error)?;
+        if mode & 1 != 0 && metadata.mode & 0o170000 != 0o040000 && metadata.mode & 0o111 == 0 {
+            return Err(EACCES);
+        }
+        Ok(0)
+    })();
+    Outcome::Complete(result)
+}
+
+fn deadline() -> Result<u64, Errno> {
+    runtime::thread::now_ns()
+        .map(|now| now.saturating_add(5_000_000_000))
+        .map_err(|_| EIO)
 }
 
 pub(in crate::syscall) fn statat<'a>(

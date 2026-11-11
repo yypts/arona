@@ -353,6 +353,48 @@ statx_zero:
     li.d $a4, 0
     invoke 291
     expect -14
+    li.d $a0, -100
+    la.pcrel $a1, data_path
+    li.d $a2, 0
+    invoke 48
+    expect 0
+    li.d $a0, -100
+    la.pcrel $a1, data_path
+    li.d $a2, 4
+    invoke 48
+    expect 0
+    li.d $a0, -100
+    la.pcrel $a1, data_path
+    li.d $a2, 1
+    invoke 48
+    expect -13
+    li.d $a0, -100
+    la.pcrel $a1, directory_path
+    li.d $a2, 1
+    invoke 48
+    expect 0
+    li.d $a0, -100
+    la.pcrel $a1, missing_path
+    li.d $a2, 0
+    invoke 48
+    expect -2
+    li.d $a0, -100
+    la.pcrel $a1, data_path
+    li.d $a2, 4
+    li.d $a3, 0x200
+    invoke 439
+    expect 0
+    li.d $a0, -100
+    la.pcrel $a1, data_path
+    li.d $a2, 4
+    li.d $a3, 0x100
+    invoke 439
+    expect -95
+    li.d $a0, -100
+    la.pcrel $a1, data_path
+    li.d $a2, 8
+    invoke 48
+    expect -22
     li.d $a0, 42
     invoke 94
 metadata_failure:

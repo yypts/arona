@@ -354,6 +354,48 @@ statx_zero:
     li a4, 0
     invoke 291
     expect -14
+    li a0, -100
+    la a1, data_path
+    li a2, 0
+    invoke 48
+    expect 0
+    li a0, -100
+    la a1, data_path
+    li a2, 4
+    invoke 48
+    expect 0
+    li a0, -100
+    la a1, data_path
+    li a2, 1
+    invoke 48
+    expect -13
+    li a0, -100
+    la a1, directory_path
+    li a2, 1
+    invoke 48
+    expect 0
+    li a0, -100
+    la a1, missing_path
+    li a2, 0
+    invoke 48
+    expect -2
+    li a0, -100
+    la a1, data_path
+    li a2, 4
+    li a3, 0x200
+    invoke 439
+    expect 0
+    li a0, -100
+    la a1, data_path
+    li a2, 4
+    li a3, 0x100
+    invoke 439
+    expect -95
+    li a0, -100
+    la a1, data_path
+    li a2, 8
+    invoke 48
+    expect -22
     li a0, 42
     invoke 94
 metadata_failure:
